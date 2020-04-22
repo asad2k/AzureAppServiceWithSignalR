@@ -1,0 +1,70 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<h3>Upload Images</h3>
+
+<form id="fileinfo">
+    <label>Enter title</label>
+    <input type="text" name="title" id="title" />
+    <label>Upload file</label>
+    <input type="file" id="image" name="image" />
+    <hr />
+    <input type="button" id="uploadBTN" class="btn btn-primary" value="Upload!" />
+</form>
+
+<div id="output">
+
+</div>
+
+<div class="container">
+    <h3>Images </h3>
+    <div id="DisplayMessages"></div>
+</div>
+
+@section Scripts {
+    <script src="~/js/signalr/dist//browser/signalr.js"></script>
+
+    <script>
+        var connection = new signalR.HubConnectionBuilder().withUrl("https://{yourfunctionapphere}.azurewebsites.net/api").build();
+
+        connection.on('RecievedMessage', function(title, message) {
+
+            var div = $('<div>');
+
+            var img = $('<img><br/>');
+            img.attr('src', message);
+            img.height(150, 150);
+
+            div.append('Title: ' + title);
+
+            img.appendTo(div);
+
+            div.appendTo('#DisplayMessages')
+        });
+
+        connection.start().catch(function (err) {
+            return console.error(err.toString());
+        });
+
+        $(function () {
+            $('#uploadBTN').on('click', function () {
+                var fd = new FormData();
+                fd.append("title", $('#title').val());
+                fd.append("image", $('#image')[0].files[0]);
+
+                $.ajax({
+                    url: '/api/ImageUpload/',
+                    type: 'POST',
+                    data: fd,
+                    success: function (data) {
+                        $('#output').html(data);
+                    },
+                    cache: false,
+                    contentType: false,
+                    processData: false
+                });
+            });
+        });
+    </script>
+}
